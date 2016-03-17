@@ -183,7 +183,7 @@ QImage DkFilter::applyGothamFilter(const QImage inImg){
 	cv::cvtColor(matResImg,matResImg,cv::COLOR_BGR2HSV);
 
 	int nChnls = matResImg.channels();
-	int indexS = 0;
+	int indexS = 1;
     int nRows = matResImg.rows;
     int nCols = matResImg.cols;
     uchar* p;
