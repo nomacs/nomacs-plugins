@@ -36,7 +36,7 @@
   * #MENU_NAME			- a user friendly name (e.g. Flip Image)
   * #MENU_STATUS_TIPP	- status tip of your plugin
   * #RUN_ID_1			- generate an ID using: GUID without hyphens generated at http://www.guidgenerator.com/
-  * ID_ACTION1			- your action name (e.g. id_flip_horizontally)
+  * ID_GOTHAM			- your action name (e.g. id_flip_horizontally)
   * #ACTION_NAME1		- your action name (e.g. Flip Horizotally - user friendly!)
   * #ACTION_TIPP1		- your action status tip (e.g. Flips an image horizontally - user friendly!)
   *******************************************************************************************************/
@@ -52,20 +52,20 @@ DkFilter::DkFilter(QObject* parent) : QObject(parent) {
 	QVector<QString> runIds;
 	runIds.resize(id_end);
 
-	runIds[ID_ACTION1] = "b35412d307a847218a1ddc1ff6ccb84b";
-	runIds[ID_ACTION2] = "920a6644a1914dc683cd5b10f51c61eb";
-	runIds[ID_ACTION3] = "d9d794b65fae4874846bdc2937e1a81b";
-	runIds[ID_ACTION4] = "4863aa921e9d4c52a0f60ded4b952cf3";
+	runIds[ID_GOTHAM] = "b35412d307a847218a1ddc1ff6ccb84b";
+	runIds[ID_LOMO] = "920a6644a1914dc683cd5b10f51c61eb";
+	runIds[ID_KELVIN] = "d9d794b65fae4874846bdc2937e1a81b";
+	runIds[ID_SEPIA] = "4863aa921e9d4c52a0f60ded4b952cf3";
 	mRunIDs = runIds.toList();
 
 	// create menu actions
 	QVector<QString> menuNames;
 	menuNames.resize(id_end);
 
-	menuNames[ID_ACTION1] = tr("Gotham");
-	menuNames[ID_ACTION2] = tr("Lomo(without vignette)");
-	menuNames[ID_ACTION3] = tr("Kelvin");
-	menuNames[ID_ACTION4] = tr("Sepia");
+	menuNames[ID_GOTHAM] = tr("Gotham");
+	menuNames[ID_LOMO] = tr("Lomo(without vignette)");
+	menuNames[ID_KELVIN] = tr("Kelvin");
+	menuNames[ID_SEPIA] = tr("Sepia");
 
 	mMenuNames = menuNames.toList();
 
@@ -73,10 +73,10 @@ DkFilter::DkFilter(QObject* parent) : QObject(parent) {
 	QVector<QString> statusTips;
 	statusTips.resize(id_end);
 
-	statusTips[ID_ACTION1] = tr("Applies Instagram Gotham Filter to image");
-	statusTips[ID_ACTION2] = tr("Applies Instagram Lomo(without vignette) Filter to image,");
-	statusTips[ID_ACTION3] = tr("Applies Instagram Kelvin Filter to image");
-	statusTips[ID_ACTION4] = tr("Applies Sepia Filter to image");
+	statusTips[ID_GOTHAM] = tr("Applies Instagram Gotham Filter to image");
+	statusTips[ID_LOMO] = tr("Applies Instagram Lomo(without vignette) Filter to image,");
+	statusTips[ID_KELVIN] = tr("Applies Instagram Kelvin Filter to image");
+	statusTips[ID_SEPIA] = tr("Applies Sepia Filter to image");
 	mMenuStatusTips = statusTips.toList();
 }
 /**
@@ -143,23 +143,23 @@ QSharedPointer<nmc::DkImageContainer> DkFilter::runPlugin(const QString &runID, 
 	if (!imgC)
 		return imgC;
 	#ifdef WITH_OPENCV
-		if(runID == mRunIDs[ID_ACTION1]) {
+		if(runID == mRunIDs[ID_GOTHAM]) {
 			QImage return_img(imgC->image());
 			return_img = DkFilter::applyGothamFilter(imgC->image()) ;
 			imgC->setImage(return_img, tr("Gotham"));
 
 		}
-		else if (runID == mRunIDs[ID_ACTION2]){
+		else if (runID == mRunIDs[ID_LOMO]){
 			QImage return_img(imgC->image());
 			return_img = DkFilter::applyLomoFilter(imgC->image()) ;
 			imgC->setImage(return_img, tr("Lomo"));
 		}
-		else if (runID == mRunIDs[ID_ACTION3]){
+		else if (runID == mRunIDs[ID_KELVIN]){
 			QImage return_img(imgC->image());
 			return_img = DkFilter::applyKelvinFilter(imgC->image()) ;
 			imgC->setImage(return_img, tr("Kelvin"));
 		}
-		else if (runID == mRunIDs[ID_ACTION4]){
+		else if (runID == mRunIDs[ID_SEPIA]){
 			QImage return_img(imgC->image());
 			return_img = DkFilter::applySepiaFilter(imgC->image()) ;
 			imgC->setImage(return_img, tr("Sepia"));
@@ -181,31 +181,34 @@ QImage DkFilter::applyGothamFilter(const QImage inImg){
 	
 	//Desaturate to 10% by changing to HSV and decresaing S channel to 10%
 	cv::cvtColor(matResImg,matResImg,cv::COLOR_BGR2HSV);
-	for (int i=0; i < matResImg.rows ; i++)
-	{
-      for(int j=0; j < matResImg.cols; j++)
-      {
-            matResImg.at<cv::Vec3b>(i,j)[1] = 0.1*(matResImg.at<cv::Vec3b>(i,j)[1]) ;     
-      }
-	}
 
+	int nChnls = matResImg.channels();
+	int indexS = 0;
+    int nRows = matResImg.rows;
+    int nCols = matResImg.cols;
+    uchar* p;
+    for(int i=0;i< nRows;i++){
+    	p = matResImg.ptr<uchar>(i);
+    	for(int j = 0; j < nCols; j++){
+    		p[nChnls*j+indexS] = 0.1*p[nChnls*j+indexS];
+    	}
+    }
 	// HSV back to BGR
 	cv::cvtColor(matResImg, matResImg, cv::COLOR_HSV2BGR);
 
 	//give light purple shade
-	std::vector<cv::Mat> channels(3);
-	cv::split(matResImg, channels);
-	for (int i=0; i < matResImg.rows ; i++)
+	for (int i=0; i < nRows ; i++)
 	{
-      for(int j=0; j < matResImg.cols; j++)
+	  p = matResImg.ptr<uchar>(i);
+      for(int j=0; j < nCols; j++)
       {
-      		channels[2].at<uchar>(i,j)= 0.13*channels[2].at<uchar>(i,j)+0.17*channels[1].at<uchar>(i,j)+0.43*channels[0].at<uchar>(i,j);
-      		channels[1].at<uchar>(i,j)= 0.12*channels[2].at<uchar>(i,j)+0.16*channels[1].at<uchar>(i,j)+0.42*channels[0].at<uchar>(i,j);
-      		channels[0].at<uchar>(i,j)= 0.11*channels[2].at<uchar>(i,j)+0.18*channels[1].at<uchar>(i,j)+0.42*channels[0].at<uchar>(i,j);
+      		
+      		p[nChnls*j+2]= 0.13*p[nChnls*j+2]+0.17*p[nChnls*j+1]+0.43*p[nChnls*j];
+      		p[nChnls*j+1]= 0.12*p[nChnls*j+2]+0.16*p[nChnls*j+1]+0.42*p[nChnls*j];
+      		p[nChnls*j]= 0.11*p[nChnls*j+2]+0.18*p[nChnls*j+1]+0.42*p[nChnls*j];
 
       }
 	}
-	cv::merge(channels,matResImg);
 	
 	matResImg.convertTo(matResImg,-1,1.2,0); 
 	QImage resImg = nmc::DkImage::mat2QImage(matResImg);
@@ -250,20 +253,24 @@ QImage DkFilter::applyKelvinFilter(const QImage inImg){
 QImage DkFilter::applySepiaFilter(const QImage inImg){
 	cv::Mat matResImg=nmc::DkImage::qImage2Mat(inImg);
 
-	std::vector<cv::Mat> channels;
-	cv::split(matResImg, channels);
-	for (int i=0; i < matResImg.rows ; i++)
+
+	int nRows = matResImg.rows;
+    int nCols = matResImg.cols;
+    int nChnls = matResImg.channels();
+    uchar* p;
+	for (int i=0; i < nRows ; i++)
 	{
-      for(int j=0; j < matResImg.cols; j++)
+	  p = matResImg.ptr<uchar>(i);
+      for(int j=0; j < nCols; j++)
       {
-      		
-      		channels[2].at<uchar>(i,j)= std::min(0.393*channels[2].at<uchar>(i,j)+0.769*channels[1].at<uchar>(i,j)+0.189*channels[0].at<uchar>(i,j),255.0);
-      		channels[1].at<uchar>(i,j)= std::min(0.349*channels[2].at<uchar>(i,j)+0.686*channels[1].at<uchar>(i,j)+0.168*channels[0].at<uchar>(i,j),255.0);
-      		channels[0].at<uchar>(i,j)= std::min(0.272*channels[2].at<uchar>(i,j)+0.534*channels[1].at<uchar>(i,j)+0.131*channels[0].at<uchar>(i,j),255.0);
+    
+      		p[nChnls*j+2]= std::min(0.393*p[nChnls*j+2]+0.769*p[nChnls*j+1]+0.189*p[nChnls*j],255.0);
+      		p[nChnls*j+1]= std::min(0.349*p[nChnls*j+2]+0.686*p[nChnls*j+1]+0.168*p[nChnls*j],255.0);
+      		p[nChnls*j]= std::min(0.272*p[nChnls*j+2]+0.534*p[nChnls*j+1]+0.131*p[nChnls*j],255.0);
 
       }
 	}
-	cv::merge(channels,matResImg);
+	
 	QImage resImg = nmc::DkImage::mat2QImage(matResImg);
 	return resImg;
 };
