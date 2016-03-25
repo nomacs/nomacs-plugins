@@ -26,6 +26,7 @@
 
 #include "DkPluginInterface.h"
 #include "DkImageStorage.h"
+
 // OpenCV
 #ifdef WITH_OPENCV
 
@@ -63,10 +64,10 @@ public:
 	static QImage applyKelvinFilter(QImage inImg);
 	static QImage applySepiaFilter(QImage inImg);
 	enum {
-		ID_ACTION1,
-		ID_ACTION2,
-		ID_ACTION3,
-		ID_ACTION4,
+		ID_GOTHAM,
+		ID_LOMO,
+		ID_KELVIN,
+		ID_SEPIA,
 		// add actions here
 
 		id_end
