@@ -7,7 +7,7 @@ namespace nmc {
 	{
 		setAcceptDrops(true); 
 		buildUI();
-		clear();
+		setImg();
 	}
 
 	SbChannelWidget::~SbChannelWidget()
@@ -19,15 +19,18 @@ namespace nmc {
 		return img;
 	}
 
-	void SbChannelWidget::clear()
+	void SbChannelWidget::setImg(cv::Mat _img)
 	{
 		//reset channel to empty
-		img = cv::Mat();
-		setThumbnail(cv::Mat::ones(cv::Size(DISP_IMG_MAX_SIZE, DISP_IMG_MAX_SIZE), CV_8UC1)*255);
+		img = _img;
+		if (img.empty())
+			setThumbnail(cv::Mat::ones(cv::Size(DISP_IMG_MAX_SIZE, DISP_IMG_MAX_SIZE), CV_8UC1) * 255);
+		else
+			setThumbnail(img);
 	}
 
 
-	void SbChannelWidget::updateImage(QString file) {
+	void SbChannelWidget::loadImage(QString file) {
 
 		//load image content for channel
 		DkBasicLoader bl;
@@ -98,7 +101,7 @@ namespace nmc {
 			qDebug() << "you droped more than 1 files. I am taking the first one I find..";
 		QUrl url = urls[0];
 		QString s = url.toLocalFile();
-		updateImage(s);
+		loadImage(s);
 	}
 
 	void SbChannelWidget::dragEnterEvent(QDragEnterEvent* event)

@@ -34,7 +34,8 @@ namespace nmc {
 		const Channel c;
 
 		cv::Mat getImg();
-		void clear();
+		void setImg(cv::Mat _img = cv::Mat());
+
 
 	protected:
 		static const int DISP_IMG_MAX_SIZE = 150;
@@ -43,7 +44,7 @@ namespace nmc {
 		QLabel* thumbnail;
 		QLabel* filenameLabel;
 
-		void updateImage(QString file = "");
+		void loadImage(QString file = "");
 		void buildUI();
 		void setThumbnail(cv::Mat img);
 

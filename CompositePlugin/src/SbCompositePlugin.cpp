@@ -99,6 +99,7 @@ bool SbCompositePlugin::createViewPort(QWidget* parent)
 
 	if (!viewport) {
 		viewport = new SbViewPort(parent);
+		connect(viewport, SIGNAL(gotImage()), this, SLOT(onViewportGotImage()));
 	}
 	if (!dockWidget) {
 		buildUI();
@@ -124,7 +125,7 @@ void SbCompositePlugin::setVisible(bool visible)
 	if (!visible) {
 		//cleanup
 		for (SbChannelWidget* cw : channelWidgets) {
-			cw->clear();
+			cw->setImg();
 		}
 		for (int i = 0; i < 3; i++) {
 			channels[i] = cv::Mat();
@@ -196,6 +197,22 @@ void SbCompositePlugin::onPushButtonCancel()
 	emit viewport->closePlugin(false);
 }
 
+void SbCompositePlugin::onViewportGotImage()
+{
+	//put that image into the three channels
+	QSharedPointer<DkImageContainerT> imgC = viewport->getImgC();
+	cv::Mat rgb = DkImage::qImage2Mat(imgC->image());
+	if (rgb.channels() >= 3) {
+		std::vector<cv::Mat> c;
+		split(rgb, c);
+		for (int i = 0; i < 3; i++) {
+			channels[i] = c[2-i];	//channels are BGR.. why?
+			channelWidgets[i]->setImg(c[2 - i]);
+		}
+	}
+	//else? i don't think this can happen..
+}
+
 void SbCompositePlugin::onImageChanged(int c) {
 	qDebug() << "image changed in channel " << c;
 	channels[c] = channelWidgets[c]->getImg();
@@ -206,7 +223,7 @@ void SbCompositePlugin::onImageChanged(int c) {
 			if (!(channels[i].rows == channels[c].rows &&
 				channels[i].cols == channels[c].cols)) {
 				channels[i] = cv::Mat::zeros(channels[c].rows, channels[c].cols, channels[c].type());
-				channelWidgets[i]->clear();
+				channelWidgets[i]->setImg();
 			}
 		}
 	}

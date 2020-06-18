@@ -57,17 +57,26 @@ signals:
 
 
 class SbViewPort : public DkPluginViewPort {
-
+	Q_OBJECT
 public:
 	SbViewPort(QWidget* parent = 0) : DkPluginViewPort(parent) {};
 
 	void updateImageContainer(QSharedPointer<DkImageContainerT> imgC) override {
-
 		if (!imgC)
 			return;
-
-		qDebug() << "aber hallo: " << imgC->fileName();
+		this->imgC = imgC;
+		emit gotImage();
 	}
+
+	QSharedPointer<DkImageContainerT> getImgC() {
+		return imgC;
+	}
+
+private:
+	QSharedPointer<DkImageContainerT> imgC;
+
+signals:
+	void gotImage();
 
 };
 
@@ -110,7 +119,7 @@ public slots:
 	void onDockWidgetClose();
 	void onPushButtonApply();
 	void onPushButtonCancel();
-
+	void onViewportGotImage();
 };
 
 };
