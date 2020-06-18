@@ -80,18 +80,19 @@ QSharedPointer<nmc::DkImageContainer> SbCompositePlugin::runPlugin(const QString
 		qDebug() << "imgC was null";
 
 	if (viewport && imgC) {
-		viewport->setVisible(false);
-		dockWidget->setVisible(false);
 		if (apply) {
 			cv::Mat finalImg;
 			cv::merge(channels, 3, finalImg);
 			QImage qFinalImg = DkImage::mat2QImage(finalImg);
 			imgC->setImage(qFinalImg, tr("composite"));	//TODO: input image names?
 		}
+		viewport->setVisible(false);
+		dockWidget->setVisible(false);
 	}
 
 	return imgC;
 }
+
 bool SbCompositePlugin::createViewPort(QWidget* parent)
 {
 	qDebug() << "called createViewPort";
@@ -99,18 +100,19 @@ bool SbCompositePlugin::createViewPort(QWidget* parent)
 	if (!viewport) {
 		viewport = new SbViewPort(parent);
 	}
-
 	if (!dockWidget) {
 		buildUI();
 	}
 	setVisible(true);
 	return false;
 }
+
 DkPluginViewPort* SbCompositePlugin::getViewPort()
 {
 	qDebug() << "called getViewPort";
 	return viewport;
 }
+
 void SbCompositePlugin::setVisible(bool visible)
 {
 	qDebug() << "called setVisible";
@@ -118,14 +120,22 @@ void SbCompositePlugin::setVisible(bool visible)
 		viewport->setVisible(visible);
 	if(dockWidget)
 		dockWidget->setVisible(visible);
-
+	
+	if (!visible) {
+		//cleanup
+		for (SbChannelWidget* cw : channelWidgets) {
+			cw->clear();
+		}
+		for (int i = 0; i < 3; i++) {
+			channels[i] = cv::Mat();
+		}
+	}
 }
 
 
 
 void SbCompositePlugin::buildUI()
 {
-
 	dockWidget = new SbCompositeDockWidget(tr("Composite Plugin"));
 	connect(dockWidget, SIGNAL(closed()), this, SLOT(onDockWidgetClose()));
 
