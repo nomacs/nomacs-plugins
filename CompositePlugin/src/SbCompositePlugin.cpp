@@ -62,7 +62,7 @@ SbCompositePlugin::~SbCompositePlugin() {
 **/
 QImage SbCompositePlugin::image() const {
 
-	return QImage(":/CompositePlugin/res/placeholder.jpg");
+	return QImage(":/CompositePlugin/img/description.png");
 };
 
 

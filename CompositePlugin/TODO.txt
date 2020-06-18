@@ -1,0 +1,3 @@
+open file dialog on klick label
+adjust brighness/exposure
+load current images in channels
