@@ -207,7 +207,7 @@ void SbCompositePlugin::onViewportGotImage()
 		split(rgb, c);
 		for (int i = 0; i < 3; i++) {
 			channels[i] = c[2-i];	//channels are BGR.. why?
-			channelWidgets[i]->setImg(c[2 - i]);
+			channelWidgets[i]->setImg(c[2 - i], imgC->fileName());
 		}
 	}
 	//else? i don't think this can happen..

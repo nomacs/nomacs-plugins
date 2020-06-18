@@ -19,7 +19,7 @@ namespace nmc {
 		return img;
 	}
 
-	void SbChannelWidget::setImg(cv::Mat _img)
+	void SbChannelWidget::setImg(cv::Mat _img, QString _name)
 	{
 		//reset channel to empty
 		img = _img;
@@ -27,6 +27,7 @@ namespace nmc {
 			setThumbnail(cv::Mat::ones(cv::Size(DISP_IMG_MAX_SIZE, DISP_IMG_MAX_SIZE), CV_8UC1) * 255);
 		else
 			setThumbnail(img);
+		filenameLabel->setText(_name);
 	}
 
 
@@ -62,7 +63,10 @@ namespace nmc {
 		QVBoxLayout* outerLayout = new QVBoxLayout(this);
 		outerLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 
-		thumbnail = new QLabel();
+		thumbnail = new QPushButton();
+		thumbnail->setFlat(true);
+		thumbnail->setIconSize(QSize(150, 150));
+		connect(thumbnail, SIGNAL(released()), this, SLOT(onClickThumbnail()));
 		filenameLabel = new QLabel();
 		QPushButton* invertButton = new QPushButton("invert");
 		connect(invertButton, SIGNAL(released()), this, SLOT(onPushButtonInvert()));
@@ -89,7 +93,7 @@ namespace nmc {
 
 		QImage qimg = DkImage::mat2QImage(imgTinted);
 		QPixmap pxm = QPixmap::fromImage(qimg);
-		thumbnail->setPixmap(pxm);
+		thumbnail->setIcon(pxm);
 	}
 	void SbChannelWidget::dropEvent(QDropEvent* event)
 	{
@@ -109,6 +113,10 @@ namespace nmc {
 		if (event->mimeData()->hasUrls()) {
 			event->acceptProposedAction();
 		}
+	}
+
+	void SbChannelWidget::onClickThumbnail()
+	{
 	}
 
 	void SbChannelWidget::onPushButtonInvert() {

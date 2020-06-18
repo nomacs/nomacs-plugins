@@ -34,14 +34,14 @@ namespace nmc {
 		const Channel c;
 
 		cv::Mat getImg();
-		void setImg(cv::Mat _img = cv::Mat());
+		void setImg(cv::Mat _img = cv::Mat(), QString _name="");
 
 
 	protected:
 		static const int DISP_IMG_MAX_SIZE = 150;
 
 		cv::Mat img;
-		QLabel* thumbnail;
+		QPushButton* thumbnail;
 		QLabel* filenameLabel;
 
 		void loadImage(QString file = "");
@@ -53,6 +53,7 @@ namespace nmc {
 
 	public slots:
 		void onPushButtonInvert();
+		void onClickThumbnail();
 
 	signals:
 		void imageChanged(int channel);
