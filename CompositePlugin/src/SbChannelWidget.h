@@ -12,6 +12,9 @@
 #include <QMimeData>
 #include <QElapsedTimer>
 #include <QPushButton>
+#include <QFileDialog>
+#include <QSettings>
+#include <QDir>
 
 #include <opencv2/opencv.hpp>
 #include "DkImageStorage.h"

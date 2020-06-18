@@ -117,6 +117,16 @@ namespace nmc {
 
 	void SbChannelWidget::onClickThumbnail()
 	{
+		const QString FILE_LOC_KEY = "comp_last_file_loc";
+		QSettings settings; 
+
+
+		QString fileName = QFileDialog::getOpenFileName(this, "Open Image File", settings.value(FILE_LOC_KEY).toString());
+		if (!fileName.isEmpty()) {
+			QFileInfo finf(fileName);
+			settings.setValue(FILE_LOC_KEY, QDir().absoluteFilePath(fileName));
+			loadImage(fileName);
+		}
 	}
 
 	void SbChannelWidget::onPushButtonInvert() {
