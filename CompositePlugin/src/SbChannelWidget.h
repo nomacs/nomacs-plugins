@@ -15,6 +15,7 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <QDir>
+#include <QSlider>
 
 #include <opencv2/opencv.hpp>
 #include "DkImageStorage.h"
@@ -46,6 +47,7 @@ namespace nmc {
 		cv::Mat img;
 		QPushButton* thumbnail;
 		QLabel* filenameLabel;
+		QSlider* intSlider;
 
 		void loadImage(QString file = "");
 		void buildUI();
@@ -57,6 +59,7 @@ namespace nmc {
 	public slots:
 		void onPushButtonInvert();
 		void onClickThumbnail();
+		void onIntensityChange();
 
 	signals:
 		void imageChanged(int channel);

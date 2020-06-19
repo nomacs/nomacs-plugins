@@ -16,7 +16,7 @@ namespace nmc {
 
 	cv::Mat SbChannelWidget::getImg()
 	{
-		return img;
+		return img + intSlider->value();
 	}
 
 	void SbChannelWidget::setImg(cv::Mat _img, QString _name)
@@ -75,12 +75,25 @@ namespace nmc {
 		thumbnail->setIconSize(QSize(DISP_IMG_MAX_SIZE, DISP_IMG_MAX_SIZE));
 		connect(thumbnail, SIGNAL(released()), this, SLOT(onClickThumbnail()));
 		filenameLabel = new QLabel();
+		
+		QHBoxLayout* controlsLayout = new QHBoxLayout();
 		QPushButton* invertButton = new QPushButton("invert");
 		connect(invertButton, SIGNAL(released()), this, SLOT(onPushButtonInvert()));
+		intSlider = new QSlider(Qt::Orientation::Horizontal);
+		intSlider->setMinimum(-100);
+		intSlider->setMaximum(100);
+		intSlider->setSingleStep(1);
+		intSlider->setValue(0);
+		intSlider->setTickInterval(50);
+		intSlider->setTickPosition(QSlider::TickPosition::TicksBelow);
+		intSlider->setToolTip("adjust intensity");
+		connect(intSlider, SIGNAL(sliderReleased()), this, SLOT(onIntensityChange()));
+		controlsLayout->addWidget(invertButton);
+		controlsLayout->addWidget(intSlider);
 
 		outerLayout->addWidget(thumbnail);
 		outerLayout->addWidget(filenameLabel);
-		outerLayout->addWidget(invertButton);
+		outerLayout->addLayout(controlsLayout);
 
 		//setLayout(outerLayout);
 	}
@@ -134,6 +147,14 @@ namespace nmc {
 			settings.setValue(FILE_LOC_KEY, QDir().absoluteFilePath(fileName));
 			loadImage(fileName);
 		}
+	}
+
+	void SbChannelWidget::onIntensityChange()
+	{
+		qDebug() << "intensity changed";
+		if (!img.empty())
+			setThumbnail(img + intSlider->value());
+			emit(imageChanged(c));
 	}
 
 	void SbChannelWidget::onPushButtonInvert() {
