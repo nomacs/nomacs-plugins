@@ -152,6 +152,7 @@ void SbCompositePlugin::buildUI()
 	for(SbChannelWidget * s: channelWidgets) 
 	{
 		connect(s, SIGNAL(imageChanged(int)), this, SLOT(onImageChanged(int)));
+		connect(s, SIGNAL(newAlpha(QImage)), this, SLOT(onNewAlpha(QImage)));
 		outerLayout->addWidget(s);
 	}
 
@@ -180,6 +181,19 @@ void SbCompositePlugin::buildUI()
 		mainWindow->addDockWidget((Qt::DockWidgetArea)dockLocation, dockWidget);
 }
 
+QImage SbCompositePlugin::buildComposite()
+{
+	cv::Mat composite;
+	if (alpha.empty()) {
+		cv::merge(channels, 3, composite);
+	}
+	else {
+		cv::Mat bgra[4] = { channels[2], channels[1], channels[0], alpha };	//when merging 4 channels, blue and red are reversed again.. why..
+		cv::merge(bgra, 4, composite);
+	}
+	return DkImage::mat2QImage(composite);
+}
+
 void SbCompositePlugin::onDockWidgetClose()
 {
 	emit viewport->closePlugin(true);
@@ -201,7 +215,8 @@ void SbCompositePlugin::onViewportGotImage()
 {
 	//put that image into the three channels
 	QSharedPointer<DkImageContainerT> imgC = viewport->getImgC();
-	cv::Mat rgb = DkImage::qImage2Mat(imgC->image());
+	QImage newImage = imgC->image();
+	cv::Mat rgb = DkImage::qImage2Mat(newImage);
 	if (rgb.channels() >= 3) {
 		std::vector<cv::Mat> c;
 		split(rgb, c);
@@ -209,8 +224,30 @@ void SbCompositePlugin::onViewportGotImage()
 			channels[i] = c[2-i];	//channels are BGR.. why?
 			channelWidgets[i]->setImg(c[2 - i], imgC->fileName());
 		}
+		if (rgb.channels() >= 4) {
+			alpha = c[3];
+		}
 	}
 	//else? i don't think this can happen..
+	emit viewport->loadImage(buildComposite());
+}
+
+void SbCompositePlugin::onNewAlpha(QImage _alpha)
+{
+	
+	if (_alpha == QImage()) {
+		qDebug() << "got empty alpha";
+		alpha = cv::Mat();
+	}
+	else {
+		qDebug() << "got full alpha";
+		alpha = DkImage::qImage2Mat(_alpha);
+		//at the moment, qImage2Mat converts a single-channel QImage to a multi-channel Mat. so..
+		if(alpha.channels() == 4)
+			cv::cvtColor(alpha, alpha, CV_RGBA2GRAY);
+		else if (alpha.channels() == 3)
+			cv::cvtColor(alpha, alpha, CV_RGB2GRAY);
+	}
 }
 
 void SbCompositePlugin::onImageChanged(int c) {
@@ -227,13 +264,7 @@ void SbCompositePlugin::onImageChanged(int c) {
 			}
 		}
 	}
-
-	cv::Mat composite;
-	cv::merge(channels, 3, composite);
-
-	QImage qComposite = DkImage::mat2QImage(composite);
-
-	viewport->loadImage(qComposite);
+	viewport->loadImage(buildComposite());
 }
 
 };

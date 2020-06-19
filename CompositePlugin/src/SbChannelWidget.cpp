@@ -38,12 +38,19 @@ namespace nmc {
 		bool couldLoad = bl.loadGeneral(file);
 
 		if (couldLoad) {
-			// much faster but not that stable:
-			//img = cv::imread(file.toStdString(), cv::IMREAD_GRAYSCALE);
+			QImage qImg = bl.image();
+			if (qImg.hasAlphaChannel()) {
+				emit newAlpha(qImg.alphaChannel());		//aparently alphaChannel() is obsolete, however I don't know what else to use
+				//emit newAlpha(qImg.convertToFormat(QImage::Format_Alpha8));		//because that doesn't seem to work as expected..
+			}
+			else {
+				emit newAlpha(QImage());
+			}
 			
-			auto gImg = DkImage::grayscaleImage(bl.image());
+			//this is optional; markus says it makes the grayscale image nicer
+			qImg = DkImage::grayscaleImage(qImg);
 
-			img = DkImage::qImage2Mat(gImg);
+			img = DkImage::qImage2Mat(qImg);
 			cv::cvtColor(img, img, CV_RGB2GRAY);
 
 			setThumbnail(img);
@@ -65,7 +72,7 @@ namespace nmc {
 
 		thumbnail = new QPushButton();
 		thumbnail->setFlat(true);
-		thumbnail->setIconSize(QSize(150, 150));
+		thumbnail->setIconSize(QSize(DISP_IMG_MAX_SIZE, DISP_IMG_MAX_SIZE));
 		connect(thumbnail, SIGNAL(released()), this, SLOT(onClickThumbnail()));
 		filenameLabel = new QLabel();
 		QPushButton* invertButton = new QPushButton("invert");
@@ -97,7 +104,7 @@ namespace nmc {
 	}
 	void SbChannelWidget::dropEvent(QDropEvent* event)
 	{
-		qDebug() << "you dropped something there!";
+		qDebug() << "dropped something on the channel widget!";
 		QList<QUrl> urls = event->mimeData()->urls();
 		if (urls.length() < 1)
 			return;

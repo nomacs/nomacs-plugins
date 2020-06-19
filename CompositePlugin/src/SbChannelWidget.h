@@ -60,6 +60,7 @@ namespace nmc {
 
 	signals:
 		void imageChanged(int channel);
+		void newAlpha(QImage alpha);
 	};
 
 

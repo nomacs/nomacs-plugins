@@ -109,10 +109,12 @@ protected:
 	QWidget* mainWidget = 0;
 	QVector<SbChannelWidget*> channelWidgets;
 	SbViewPort* viewport = 0;
-	cv::Mat channels[3];
+	cv::Mat channels[4];
+	cv::Mat alpha;
 	bool apply = false;
 
 	void buildUI();
+	QImage buildComposite();
 
 public slots:
 	void onImageChanged(int channel);
@@ -120,6 +122,7 @@ public slots:
 	void onPushButtonApply();
 	void onPushButtonCancel();
 	void onViewportGotImage();
+	void onNewAlpha(QImage _alpha);
 };
 
 };
