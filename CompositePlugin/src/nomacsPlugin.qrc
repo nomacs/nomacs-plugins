@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/CompositePlugin">
-      <file>img/placeholder.jpg</file>
       <file>img/description.png</file>
     </qresource>
 </RCC>

@@ -44,19 +44,6 @@
 namespace nmc {
 
 /**
-*	Constructor
-**/
-SbCompositePlugin::SbCompositePlugin(QObject* parent) : QObject(parent) {
-	
-}
-
-/**
-*	Destructor
-**/
-SbCompositePlugin::~SbCompositePlugin() {
-}
-
-/**
 * Returns descriptive image for every ID
 * @param plugin ID
 **/
@@ -134,6 +121,8 @@ void SbCompositePlugin::setVisible(bool visible)
 }
 
 
+//##############################################################
+
 
 void SbCompositePlugin::buildUI()
 {
@@ -167,13 +156,10 @@ void SbCompositePlugin::buildUI()
 
 	mainWidget->setLayout(outerLayout);
 
+	// dock widget setup
 	QScrollArea* scroller = new QScrollArea(dockWidget);
 	scroller->setWidget(mainWidget);
 	dockWidget->setWidget(scroller);
-
-
-	////////////////////
-
 	QSettings settings;
 	int dockLocation = settings.value("sbCompWidgetLocation", Qt::LeftDockWidgetArea).toInt();
 	QMainWindow* mainWindow = getMainWindow();
@@ -194,6 +180,62 @@ QImage SbCompositePlugin::buildComposite()
 	return DkImage::mat2QImage(composite);
 }
 
+void SbCompositePlugin::onImageChanged(int c) {
+	qDebug() << "image changed in channel " << c;
+	channels[c] = channelWidgets[c]->getImg();
+
+	//set all channels with non-matching sizes to zeros of matching size
+	for (int i = 0; i < 3; i++) {
+		if (i != c) {
+			if (!(channels[i].rows == channels[c].rows &&
+				channels[i].cols == channels[c].cols)) {
+				channels[i] = cv::Mat::zeros(channels[c].rows, channels[c].cols, channels[c].type());
+				channelWidgets[i]->setImg();
+			}
+		}
+	}
+	viewport->loadImage(buildComposite());
+}
+
+void SbCompositePlugin::onNewAlpha(QImage _alpha)
+{
+
+	if (_alpha == QImage()) {
+		qDebug() << "got empty alpha";
+		alpha = cv::Mat();
+	}
+	else {
+		qDebug() << "got full alpha";
+		alpha = DkImage::qImage2Mat(_alpha);
+		//currently it seems like qImage2Mat converts a single-channel QImage to a multi-channel Mat. so..
+		if (alpha.channels() == 4)
+			cv::cvtColor(alpha, alpha, CV_RGBA2GRAY);
+		else if (alpha.channels() == 3)
+			cv::cvtColor(alpha, alpha, CV_RGB2GRAY);
+	}
+}
+
+void SbCompositePlugin::onViewportGotImage()
+{
+	//put that image into the three channels
+	QSharedPointer<DkImageContainerT> imgC = viewport->getImgC();
+	QImage newImage = imgC->image();
+	cv::Mat rgb = DkImage::qImage2Mat(newImage);
+	if (rgb.channels() >= 3) {
+		std::vector<cv::Mat> c;
+		split(rgb, c);
+		for (int i = 0; i < 3; i++) {
+			channels[i] = c[2 - i];	//channels are BGR.. why?
+			channelWidgets[i]->setImg(c[2 - i], imgC->fileName());
+		}
+		if (rgb.channels() >= 4) {
+			alpha = c[3];
+		}
+	}
+	//else? i don't think this can happen..
+	emit viewport->loadImage(buildComposite());
+}
+
 void SbCompositePlugin::onDockWidgetClose()
 {
 	emit viewport->closePlugin(true);
@@ -209,62 +251,6 @@ void SbCompositePlugin::onPushButtonCancel()
 {
 	apply = false;
 	emit viewport->closePlugin(false);
-}
-
-void SbCompositePlugin::onViewportGotImage()
-{
-	//put that image into the three channels
-	QSharedPointer<DkImageContainerT> imgC = viewport->getImgC();
-	QImage newImage = imgC->image();
-	cv::Mat rgb = DkImage::qImage2Mat(newImage);
-	if (rgb.channels() >= 3) {
-		std::vector<cv::Mat> c;
-		split(rgb, c);
-		for (int i = 0; i < 3; i++) {
-			channels[i] = c[2-i];	//channels are BGR.. why?
-			channelWidgets[i]->setImg(c[2 - i], imgC->fileName());
-		}
-		if (rgb.channels() >= 4) {
-			alpha = c[3];
-		}
-	}
-	//else? i don't think this can happen..
-	emit viewport->loadImage(buildComposite());
-}
-
-void SbCompositePlugin::onNewAlpha(QImage _alpha)
-{
-	
-	if (_alpha == QImage()) {
-		qDebug() << "got empty alpha";
-		alpha = cv::Mat();
-	}
-	else {
-		qDebug() << "got full alpha";
-		alpha = DkImage::qImage2Mat(_alpha);
-		//at the moment, qImage2Mat converts a single-channel QImage to a multi-channel Mat. so..
-		if(alpha.channels() == 4)
-			cv::cvtColor(alpha, alpha, CV_RGBA2GRAY);
-		else if (alpha.channels() == 3)
-			cv::cvtColor(alpha, alpha, CV_RGB2GRAY);
-	}
-}
-
-void SbCompositePlugin::onImageChanged(int c) {
-	qDebug() << "image changed in channel " << c;
-	channels[c] = channelWidgets[c]->getImg();
-	
-	//set all channels with non-matching sizes to zeros of matching size
-	for (int i = 0; i < 3; i++) {
-		if (i != c) {
-			if (!(channels[i].rows == channels[c].rows &&
-				channels[i].cols == channels[c].cols)) {
-				channels[i] = cv::Mat::zeros(channels[c].rows, channels[c].cols, channels[c].type());
-				channelWidgets[i]->setImg();
-			}
-		}
-	}
-	viewport->loadImage(buildComposite());
 }
 
 };

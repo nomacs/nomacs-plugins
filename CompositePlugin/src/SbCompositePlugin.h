@@ -25,7 +25,6 @@
 #pragma once
 
 #include "DkPluginInterface.h"
-#include "DkImageStorage.h"
 #include "SbChannelWidget.h"
 #include <opencv2/opencv.hpp>
 #include <QDockWidget>
@@ -40,6 +39,7 @@
 
 namespace nmc {
 
+// subclassed to access its close event
 class SbCompositeDockWidget : public QDockWidget {
 	Q_OBJECT
 public:
@@ -55,32 +55,28 @@ signals:
 	void closed();
 };
 
-
+// subclassed to access the image container
 class SbViewPort : public DkPluginViewPort {
 	Q_OBJECT
 public:
 	SbViewPort(QWidget* parent = 0) : DkPluginViewPort(parent) {};
-
 	void updateImageContainer(QSharedPointer<DkImageContainerT> imgC) override {
 		if (!imgC)
 			return;
 		this->imgC = imgC;
 		emit gotImage();
 	}
-
 	QSharedPointer<DkImageContainerT> getImgC() {
 		return imgC;
 	}
-
 private:
 	QSharedPointer<DkImageContainerT> imgC;
-
 signals:
 	void gotImage();
-
 };
 
 
+// the main thing
 class SbCompositePlugin : public QObject, DkViewPortInterface {
 	Q_OBJECT
 	Q_INTERFACES(nmc::DkViewPortInterface)
@@ -88,41 +84,40 @@ class SbCompositePlugin : public QObject, DkViewPortInterface {
 
 public:
 
-	SbCompositePlugin(QObject* parent = 0);
-	~SbCompositePlugin();
+	SbCompositePlugin(QObject* parent = 0) {}
+	~SbCompositePlugin() {}
 
+	//DkPluginInterface
 	QImage image() const override;
 	QSharedPointer<nmc::DkImageContainer> runPlugin(const QString &runID = QString(), QSharedPointer<nmc::DkImageContainer> imgC = QSharedPointer<nmc::DkImageContainer>()) const override;
+	virtual bool closesOnImageChange() { return false; }	// actually I think this has no effect...
 
 	//DkViewPortInterface
-	// return false here if you have a simple viewport (no children)
-	// and you want the user to be able to e.g. scroll thumbs while your plugin is active
-	bool hideHUD() const override { return true; }
 	bool createViewPort(QWidget* parent) override;
 	DkPluginViewPort* getViewPort() override;
-
 	virtual void setVisible(bool visible) override;
-	virtual bool closesOnImageChange() { return false; }
+	
 
 protected:
 	SbCompositeDockWidget* dockWidget = 0;
 	QWidget* mainWidget = 0;
 	QVector<SbChannelWidget*> channelWidgets;
 	SbViewPort* viewport = 0;
-	cv::Mat channels[4];
+	cv::Mat channels[3];
 	cv::Mat alpha;
 	bool apply = false;
 
-	void buildUI();
-	QImage buildComposite();
+	void buildUI();					// initialize UI and connect 
+	QImage buildComposite();		// merge channels (and alpha if present) to a rgb(a) QImage
 
 public slots:
-	void onImageChanged(int channel);
-	void onDockWidgetClose();
-	void onPushButtonApply();
-	void onPushButtonCancel();
-	void onViewportGotImage();
-	void onNewAlpha(QImage _alpha);
+	void onImageChanged(int channel);	// fetch new image from respective channel
+	void onNewAlpha(QImage _alpha);		// update alpha (don't trigger buildComposite())
+	void onViewportGotImage();			// get image from the viewport, split it into channels, assign them to the channel widgets
+	void onDockWidgetClose();			// close plugin, ask for apply/cancel (this is buggy)
+	void onPushButtonApply();			// close plugin and apply
+	void onPushButtonCancel();			// close plugin and cancel
+	
 };
 
 };

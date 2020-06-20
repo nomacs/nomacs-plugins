@@ -54,7 +54,7 @@ namespace nmc {
 
 
 
-
+	// manages editing of a single color channel
 	class SbChannelWidget : public QWidget {
 		Q_OBJECT
 
@@ -63,15 +63,12 @@ namespace nmc {
 			R, G, B
 		};
 
-
 		SbChannelWidget(Channel c, QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 		~SbChannelWidget();
+		cv::Mat getImg();													// return the channel content
+		void setImg(cv::Mat _img = cv::Mat(), QString _name="");			// "override" from outside. call with empty mat --> reset. also resets intensity slider.
 
-		const Channel c;
-
-		cv::Mat getImg();
-		void setImg(cv::Mat _img = cv::Mat(), QString _name="");
-
+		const Channel c;													// so that this channel knows which one it is
 
 	protected:
 		static const int DISP_IMG_MAX_SIZE = 150;
@@ -79,26 +76,26 @@ namespace nmc {
 		static const int INT_SLIDER_MAX = 200;
 		static const int INT_SLIDER_INIT = 100;
 
-		cv::Mat img;
+		cv::Mat img;								// the channel content
 		QPushButton* thumbnail;
 		QLabel* filenameLabel;
 		SbIntensitySlider* intSlider;
 
-		void loadImage(QString file = "");
-		void buildUI();
-		void updateThumbnail();
+		void loadImage(QString file = "");			// load file with DkBasicLoader, convert to grayscale, set as img, emit imageChanged()
+		void buildUI();								// setup and connect UI elements
+		void updateThumbnail();						// update channel thumbnail using img
 
-		void dropEvent(QDropEvent* event) override;
-		void dragEnterEvent(QDragEnterEvent* event) override;
+		void dropEvent(QDropEvent* event) override;				// try loading the dropped item as an image
+		void dragEnterEvent(QDragEnterEvent* event) override;	// accept everything that has urls
 
 	public slots:
-		void onPushButtonInvert();
-		void onClickThumbnail();
-		void onIntensityChange();
+		void onPushButtonInvert();		// triggers updates, actually inverts img
+		void onClickThumbnail();		// open file dialog
+		void onIntensityChange();		// triggers updates, does NOT allter img
 
 	signals:
-		void imageChanged(int channel);
-		void newAlpha(QImage alpha);
+		void imageChanged(int channel);	// whenever there is an update (actual image change, inversion, intensity)
+		void newAlpha(QImage alpha);	// is emitted upon image loading
 	};
 
 

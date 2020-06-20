@@ -91,8 +91,6 @@ namespace nmc {
 		outerLayout->addWidget(thumbnail);
 		outerLayout->addWidget(filenameLabel);
 		outerLayout->addLayout(controlsLayout);
-
-		//setLayout(outerLayout);
 	}
 	void SbChannelWidget::updateThumbnail()
 	{
