@@ -145,9 +145,9 @@ void SbCompositePlugin::buildUI()
 	QLayout* outerLayout = new QVBoxLayout();
 	outerLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 
-	channelWidgets.append(new SbChannelWidget(SbChannelWidget::R, mainWidget));
-	channelWidgets.append(new SbChannelWidget(SbChannelWidget::G, mainWidget));
-	channelWidgets.append(new SbChannelWidget(SbChannelWidget::B, mainWidget));
+	for (int i = 0; i < 3; i++) {
+		channelWidgets.append(new SbChannelWidget(static_cast<SbChannelWidget::Channel>(i), mainWidget));
+	}
 
 	for(SbChannelWidget * s: channelWidgets) 
 	{
