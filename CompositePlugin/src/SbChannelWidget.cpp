@@ -16,18 +16,15 @@ namespace nmc {
 
 	cv::Mat SbChannelWidget::getImg()
 	{
-		return img + intSlider->value();
+		return img * (intSlider->value()/100.0);
 	}
 
 	void SbChannelWidget::setImg(cv::Mat _img, QString _name)
 	{
-		//reset channel to empty
 		img = _img;
-		if (img.empty())
-			setThumbnail(cv::Mat::ones(cv::Size(DISP_IMG_MAX_SIZE, DISP_IMG_MAX_SIZE), CV_8UC1) * 255);
-		else
-			setThumbnail(img);
+		updateThumbnail();
 		filenameLabel->setText(_name);
+		intSlider->setValue(INT_SLIDER_INIT);
 	}
 
 
@@ -53,7 +50,7 @@ namespace nmc {
 			img = DkImage::qImage2Mat(qImg);
 			cv::cvtColor(img, img, CV_RGB2GRAY);
 
-			setThumbnail(img);
+			updateThumbnail();
 			QFileInfo fi(file);
 			filenameLabel->setText(fi.fileName());
 			
@@ -79,11 +76,11 @@ namespace nmc {
 		QHBoxLayout* controlsLayout = new QHBoxLayout();
 		QPushButton* invertButton = new QPushButton("invert");
 		connect(invertButton, SIGNAL(released()), this, SLOT(onPushButtonInvert()));
-		intSlider = new QSlider(Qt::Orientation::Horizontal);
-		intSlider->setMinimum(-100);
-		intSlider->setMaximum(100);
+		intSlider = new SbIntensitySlider(Qt::Orientation::Horizontal);
+		intSlider->setMinimum(INT_SLIDER_MIN);
+		intSlider->setMaximum(INT_SLIDER_MAX);
 		intSlider->setSingleStep(1);
-		intSlider->setValue(0);
+		intSlider->setValue(INT_SLIDER_INIT);
 		intSlider->setTickInterval(50);
 		intSlider->setTickPosition(QSlider::TickPosition::TicksBelow);
 		intSlider->setToolTip("adjust intensity");
@@ -97,16 +94,24 @@ namespace nmc {
 
 		//setLayout(outerLayout);
 	}
-	void SbChannelWidget::setThumbnail(cv::Mat img)
+	void SbChannelWidget::updateThumbnail()
 	{
-		int s = std::max(img.rows, img.cols);
-		double f = (double)DISP_IMG_MAX_SIZE / (double)s;
 		cv::Mat imgScaled;
-		cv::resize(img, imgScaled, cv::Size(), f, f);
+		if (img.empty()) {
+			//set image to solid color
+			imgScaled = cv::Mat::ones(cv::Size(DISP_IMG_MAX_SIZE, DISP_IMG_MAX_SIZE), CV_8UC1) * 255;
+		}	
+		else {
+			int s = std::max(img.rows, img.cols);
+			double f = (double)DISP_IMG_MAX_SIZE / (double)s;
+			cv::resize(img, imgScaled, cv::Size(), f, f);
+		}
 		
 		cv::Mat black = cv::Mat::zeros(cv::Size(imgScaled.cols, imgScaled.rows), imgScaled.type());
 		cv::Mat channels[3] = { black, black, black };
-		channels[c] = imgScaled;
+		channels[c] = imgScaled;// *(intSlider->value() / 100.0);
+		if(!img.empty())
+			channels[c] *= (intSlider->value() / 100.0);
 
 		cv::Mat imgTinted;
 		cv::merge(channels, 3, imgTinted);
@@ -152,15 +157,16 @@ namespace nmc {
 	void SbChannelWidget::onIntensityChange()
 	{
 		qDebug() << "intensity changed";
-		if (!img.empty())
-			setThumbnail(img + intSlider->value());
+		if (!img.empty()) {
+			updateThumbnail();
 			emit(imageChanged(c));
+		}
 	}
 
 	void SbChannelWidget::onPushButtonInvert() {
 		if (!img.empty()) {
 			img = 255 - img;
-			setThumbnail(img);
+			updateThumbnail();
 			emit imageChanged(c);
 		}
 	}
