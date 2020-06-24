@@ -63,6 +63,8 @@ namespace nmc {
 			R, G, B
 		};
 
+		static const int THUMB_MAX_SIZE = 150;
+
 		SbChannelWidget(Channel c, QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
 		~SbChannelWidget();
 		cv::Mat getImg();													// return the channel content
@@ -71,7 +73,6 @@ namespace nmc {
 		const Channel c;													// so that this channel knows which one it is
 
 	protected:
-		static const int DISP_IMG_MAX_SIZE = 150;
 		static const int INT_SLIDER_MIN = 0;
 		static const int INT_SLIDER_MAX = 200;
 		static const int INT_SLIDER_INIT = 100;

@@ -126,16 +126,14 @@ void SbCompositePlugin::setVisible(bool visible)
 
 void SbCompositePlugin::buildUI()
 {
-	dockWidget = new SbCompositeDockWidget(tr("Composite Plugin"));
-	connect(dockWidget, SIGNAL(closed()), this, SLOT(onDockWidgetClose()));
-
 	mainWidget = new QWidget();
 
-	QLayout* outerLayout = new QVBoxLayout();
+	outerLayout = new QBoxLayout(QBoxLayout::Direction::TopToBottom);	//default
 	outerLayout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 
 	for (int i = 0; i < 3; i++) {
-		channelWidgets.append(new SbChannelWidget(static_cast<SbChannelWidget::Channel>(i), mainWidget));
+		SbChannelWidget* cw = new SbChannelWidget(static_cast<SbChannelWidget::Channel>(i), mainWidget);
+		channelWidgets.append(cw);
 	}
 
 	for(SbChannelWidget * s: channelWidgets) 
@@ -145,26 +143,42 @@ void SbCompositePlugin::buildUI()
 		outerLayout->addWidget(s);
 	}
 
-	QLayout* buttonLayout = new QHBoxLayout();
+	QHBoxLayout* buttonLayout = new QHBoxLayout();
 	QPushButton* applyButton = new QPushButton("apply");
+	applyButton->setIcon(QIcon(":/CompositePlugin/img/description.png"));
+	applyButton->setIconSize(QSize(24, 24));
 	connect(applyButton, SIGNAL(released()), this, SLOT(onPushButtonApply()));
 	QPushButton* cancelButton = new QPushButton("cancel");
+	cancelButton->setIcon(QIcon(":/CompositePlugin/img/close.svg"));
+	cancelButton->setIconSize(QSize(24, 24));
 	connect(cancelButton, SIGNAL(released()), this, SLOT(onPushButtonCancel()));
 	buttonLayout->addWidget(applyButton);
 	buttonLayout->addWidget(cancelButton);
+	buttonLayout->setAlignment(Qt::AlignBottom);
 	outerLayout->addItem(buttonLayout);
+	outerLayout->addStretch();
 
 	mainWidget->setLayout(outerLayout);
 
-	// dock widget setup
-	QScrollArea* scroller = new QScrollArea(dockWidget);
-	scroller->setWidget(mainWidget);
-	dockWidget->setWidget(scroller);
+
+	// dock widget & scroll area setup
+	dockWidget = new SbCompositeDockWidget(tr("Composite Plugin"));
 	QSettings settings;
-	int dockLocation = settings.value("sbCompWidgetLocation", Qt::LeftDockWidgetArea).toInt();
+	Qt::DockWidgetArea dockLocation = static_cast<Qt::DockWidgetArea>(settings.value("sbCompWidgetLocation", Qt::LeftDockWidgetArea).toInt());
+
+	scrollArea = new QScrollArea(dockWidget);
+	scrollArea->setMinimumSize(SbChannelWidget::THUMB_MAX_SIZE+50, SbChannelWidget::THUMB_MAX_SIZE+100);	//very dirty
+	scrollArea->setWidget(mainWidget);
+	scrollArea->setWidgetResizable(true);
+	
+	dockWidget->setWidget(scrollArea);
+
+	connect(dockWidget, SIGNAL(closed()), this, SLOT(onDockWidgetClose()));
+	connect(dockWidget, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), this, SLOT(onDockLocationChanged(Qt::DockWidgetArea)));
+	
 	QMainWindow* mainWindow = getMainWindow();
 	if (mainWindow)
-		mainWindow->addDockWidget((Qt::DockWidgetArea)dockLocation, dockWidget);
+		mainWindow->addDockWidget(dockLocation, dockWidget);
 }
 
 QImage SbCompositePlugin::buildComposite()
@@ -239,6 +253,22 @@ void SbCompositePlugin::onViewportGotImage()
 void SbCompositePlugin::onDockWidgetClose()
 {
 	emit viewport->closePlugin(true);
+}
+
+void SbCompositePlugin::onDockLocationChanged(Qt::DockWidgetArea a)
+{
+	//vertical layout
+	if (a == Qt::DockWidgetArea::LeftDockWidgetArea || a == Qt::DockWidgetArea::RightDockWidgetArea) {
+		scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+		outerLayout->setDirection(QBoxLayout::Direction::TopToBottom);
+	}
+	//horizontal layout
+	else {
+		scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
+		outerLayout->setDirection(QBoxLayout::Direction::LeftToRight);
+	}
 }
 
 void SbCompositePlugin::onPushButtonApply()

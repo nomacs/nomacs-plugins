@@ -100,7 +100,9 @@ public:
 
 protected:
 	SbCompositeDockWidget* dockWidget = 0;
+	QScrollArea* scrollArea = 0;
 	QWidget* mainWidget = 0;
+	QBoxLayout* outerLayout = 0;
 	QVector<SbChannelWidget*> channelWidgets;
 	SbViewPort* viewport = 0;
 	cv::Mat channels[3];
@@ -111,13 +113,13 @@ protected:
 	QImage buildComposite();		// merge channels (and alpha if present) to a rgb(a) QImage
 
 public slots:
-	void onImageChanged(int channel);	// fetch new image from respective channel
-	void onNewAlpha(QImage _alpha);		// update alpha (don't trigger buildComposite())
-	void onViewportGotImage();			// get image from the viewport, split it into channels, assign them to the channel widgets
-	void onDockWidgetClose();			// close plugin, ask for apply/cancel (this is buggy)
-	void onPushButtonApply();			// close plugin and apply
-	void onPushButtonCancel();			// close plugin and cancel
-	
+	void onImageChanged(int channel);					// fetch new image from respective channel
+	void onNewAlpha(QImage _alpha);						// update alpha (don't trigger buildComposite())
+	void onViewportGotImage();							// get image from the viewport, split it into channels, assign them to the channel widgets
+	void onDockWidgetClose();							// close plugin, ask for apply/cancel (this is buggy)
+	void onDockLocationChanged(Qt::DockWidgetArea a);	// switches between vertical / horizontal layout depending on the current dock area
+	void onPushButtonApply();							// close plugin and apply
+	void onPushButtonCancel();							// close plugin and cancel
 };
 
 };
