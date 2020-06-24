@@ -109,8 +109,8 @@ protected:
 	cv::Mat alpha;
 	bool apply = false;
 
-	void buildUI();					// initialize UI and connect 
-	QImage buildComposite();		// merge channels (and alpha if present) to a rgb(a) QImage
+	void buildUI();						// initialize UI and connect 
+	QImage buildComposite() const;		// merge channels (and alpha if present) to a rgb(a) QImage
 
 public slots:
 	void onImageChanged(int channel);					// fetch new image from respective channel

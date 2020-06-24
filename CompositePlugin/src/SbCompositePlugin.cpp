@@ -68,10 +68,7 @@ QSharedPointer<nmc::DkImageContainer> SbCompositePlugin::runPlugin(const QString
 
 	if (viewport && imgC) {
 		if (apply) {
-			cv::Mat finalImg;
-			cv::merge(channels, 3, finalImg);
-			QImage qFinalImg = DkImage::mat2QImage(finalImg);
-			imgC->setImage(qFinalImg, tr("composite"));	//TODO: input image names?
+			imgC->setImage(buildComposite(), tr("composite"));	//put input image names here?
 		}
 		viewport->setVisible(false);
 		dockWidget->setVisible(false);
@@ -181,7 +178,7 @@ void SbCompositePlugin::buildUI()
 		mainWindow->addDockWidget(dockLocation, dockWidget);
 }
 
-QImage SbCompositePlugin::buildComposite()
+QImage SbCompositePlugin::buildComposite() const
 {
 	cv::Mat composite;
 	if (alpha.empty()) {
