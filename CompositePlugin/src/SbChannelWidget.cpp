@@ -37,11 +37,15 @@ namespace nmc {
 		if (couldLoad) {
 			QImage qImg = bl.image();
 			if (qImg.hasAlphaChannel()) {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 				emit newAlpha(qImg.alphaChannel());		//aparently alphaChannel() is obsolete, however I don't know what else to use
+#endif
 				//emit newAlpha(qImg.convertToFormat(QImage::Format_Alpha8));		//because that doesn't seem to work as expected..
 			}
 			else {
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 				emit newAlpha(QImage());
+#endif
 			}
 			
 			//this is optional; markus says it makes the grayscale image nicer

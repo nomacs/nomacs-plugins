@@ -477,7 +477,7 @@ void DkPreviewLabel::mouseReleaseEvent(QMouseEvent *e) {
 	QLabel::mouseReleaseEvent(e);
 };
 
-void DkPreviewLabel::enterEvent(QEvent * e){
+void DkPreviewLabel::enterEvent(QEnterEvent * e){
 	showROI = true;
 	repaint();
     QLabel::enterEvent(e);

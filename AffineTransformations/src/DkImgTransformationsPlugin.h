@@ -268,8 +268,8 @@ class DkInteractionRects : public QWidget {
 
 public:
 	
-	DkInteractionRects(QRect imgRect, QWidget* parent = 0, Qt::WindowFlags f = 0);
-	DkInteractionRects(QWidget* parent = 0, Qt::WindowFlags f = 0);
+	DkInteractionRects(QRect imgRect, QWidget* parent = 0, Qt::WindowFlags f = Qt::Widget);
+	DkInteractionRects(QWidget* parent = 0, Qt::WindowFlags f = Qt::Widget);
 	~DkInteractionRects();
 
 	void draw(QPainter* painter);

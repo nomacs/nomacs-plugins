@@ -28,6 +28,7 @@
 #include "DkPaintPlugin.h"
 #include "DkToolbars.h"
 
+#include <QActionGroup>
 #include <QDebug>
 #include <QMouseEvent>
 
@@ -480,7 +481,6 @@ QImage DkPaintViewPort::getPaintedImage() {
 				//if (worldMatrix)
 				//	painter.setWorldTransform(*worldMatrix);
 
-				painter.setRenderHint(QPainter::HighQualityAntialiasing);
 				painter.setRenderHint(QPainter::Antialiasing);
 
 				for (int idx = 0; idx < paths.size(); idx++) {
