@@ -102,7 +102,9 @@ namespace nmc {
 
 	signals:
 		void imageChanged(int channel);	// whenever there is an update (actual image change, inversion, intensity)
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 		void newAlpha(QImage alpha);	// is emitted upon image loading
+#endif
 	};
 
 

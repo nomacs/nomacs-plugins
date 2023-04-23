@@ -33,6 +33,7 @@
 #include "DkUtils.h"
 #include "DkToolbars.h"
 
+#include <QActionGroup>
 #include <QMouseEvent>
 
 #define PI 3.14159265

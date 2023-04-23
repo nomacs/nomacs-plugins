@@ -29,6 +29,7 @@
 #include "DkImageStorage.h"
 
 #include <QDebug>
+#include <QRandomGenerator>
 
 namespace nmp {
 
@@ -301,7 +302,7 @@ cv::Mat DkSkewEstimator::computeEdgeMap(cv::Mat separability, double thr, int di
 
 int DkSkewEstimator::randInt(int low, int high) {
 
-	return qrand() % ((high + 1) - low) + low;
+	return QRandomGenerator::global()->bounded(low, high);
 }
 
 QVector<QVector3D> DkSkewEstimator::computeWeights(cv::Mat edgeMap, int direction) {
